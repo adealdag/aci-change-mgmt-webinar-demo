@@ -1,0 +1,24 @@
+- name: NAE TESTING
+  hosts: '*nae1'
+  connection: local
+  gather_facts: no
+
+  vars:
+    nae_login: &nae_login
+      host: "{{ ansible_host }}"
+      username: "{{ nae_username }}"
+      password: "{{ nae_password }}"
+      validate_certs: False
+    json_file: ./dryrun_data.json
+    pcv_name: pcv_before_prod_tn_marketplace
+
+  tasks:
+    - name: Create a pre-change analysis from file
+      cisco.nae.nae_prechange:
+        <<: *nae_login
+        ag_name: "{{ nae_ag_name }}"
+        file: "{{ json_file }}"
+        name: "{{ pcv_name }}"
+        verify: True
+        state: present
+      delegate_to: localhost

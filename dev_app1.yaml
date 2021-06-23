@@ -1,0 +1,139 @@
+# ACI playbook - Create Development App Demo
+
+- name: Create Development App Demo
+  hosts: '*apic1'
+  connection: local
+  gather_facts: no
+  
+  vars:
+    aci_login: &aci_login
+        host: "{{ ansible_host }}"
+        username: "{{ aci_username }}"
+        password: "{{ aci_password | default(omit) }}"
+        private_key: "{{ aci_private_key | default(omit) }}"
+        certificate_name: "{{ aci_certificate_name | default(omit) }}"
+        validate_certs: "{{ aci_validate_certs }}"
+        annotation: "orchestrator:ansible"
+
+  tasks:
+    - name: Add App Demo Application Profile
+      cisco.aci.aci_ap:
+        <<: *aci_login
+        tenant: development_tn
+        ap: app_demo_ap
+        state: present
+
+    - name: Add app_demo/web EPG
+      cisco.aci.aci_epg:
+        <<: *aci_login
+        tenant: development_tn
+        ap: app_demo_ap
+        epg: web_epg
+        bd: 192.168.200.0_24_bd
+        preferred_group: no
+        state: present
+
+    - name: Add app_demo/app EPG
+      cisco.aci.aci_epg:
+        <<: *aci_login
+        tenant: development_tn
+        ap: app_demo_ap
+        epg: app_epg
+        bd: 192.168.200.0_24_bd
+        preferred_group: no
+        state: present
+
+    - name: Add app_demo/db EPG
+      cisco.aci.aci_epg:
+        <<: *aci_login
+        tenant: development_tn
+        ap: app_demo_ap
+        epg: db_epg
+        bd: 192.168.201.0_24_bd
+        preferred_group: no
+        state: present
+
+    # Contracts
+
+    - name: Add contract for web_to_app
+      cisco.aci.aci_contract:
+        <<: *aci_login
+        tenant: development_tn
+        contract: web_to_app_con
+        description: Communication between web servers and application backend
+        scope: application-profile
+        state: present
+
+    - name: Add contract subject for web_to_app
+      cisco.aci.aci_contract_subject:
+        <<: *aci_login
+        tenant: development_tn
+        contract: web_to_app_con
+        subject: http_https
+        reverse_filter: yes
+        state: present
+
+    - name: Bind filters to contract subject for web_to_app
+      cisco.aci.aci_contract_subject_to_filter:
+        <<: *aci_login
+        tenant: development_tn
+        contract: web_to_app_con
+        subject: http_https
+        filter: "{{ item }}"
+        log: log
+        state: present
+      loop:
+        - http
+        - https
+
+    - name: Add contract for app_to_db
+      cisco.aci.aci_contract:
+        <<: *aci_login
+        tenant: development_tn
+        contract: app_to_db_con
+        description: Communication between application backend and databases
+        scope: application-profile
+        state: present
+
+    - name: Add contract subject for app_to_db
+      cisco.aci.aci_contract_subject:
+        <<: *aci_login
+        tenant: development_tn
+        contract: app_to_db_con
+        subject: mongodb
+        reverse_filter: yes
+        state: present
+
+    - name: Bind filters to contract subject for app_to_db
+      cisco.aci.aci_contract_subject_to_filter:
+        <<: *aci_login
+        tenant: development_tn
+        contract: app_to_db_con
+        subject: mongodb
+        filter: "{{ item }}"
+        log: log
+        state: present
+      loop:
+        - mongodb
+  
+    # Apply contracts
+
+    - name: Add contracts for app demo
+      cisco.aci.aci_epg_to_contract:
+        <<: *aci_login
+        tenant: development_tn
+        ap: app_demo_ap
+        epg: "{{ item.epg }}"
+        contract: "{{ item.contract }}"
+        contract_type: "{{ item.type }}"
+        state: present
+      loop:
+        - { epg: 'web_epg', contract: 'shared_core_l3out_con', type: 'consumer' }
+        - { epg: 'web_epg', contract: 'shared_core_l3out_con', type: 'provider' }
+        - { epg: 'web_epg', contract: 'web_to_app_con', type: 'consumer' }
+        - { epg: 'app_epg', contract: 'web_to_app_con', type: 'provider' }
+        - { epg: 'app_epg', contract: 'app_to_db_con', type: 'consumer' }
+        - { epg: 'db_epg', contract: 'app_to_db_con', type: 'provider' }
+
+
+      

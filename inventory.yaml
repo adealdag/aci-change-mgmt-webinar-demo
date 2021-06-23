@@ -1,0 +1,19 @@
+lislab:
+  hosts:
+    apic1:
+      ansible_host: apic1.lab-pt.cisco.com
+      aci_username: 'orchestrator'
+      aci_certificate_name: 'labadmin.crt'
+      aci_private_key: pki/labadmin.key
+      aci_validate_certs: no
+    nae1:
+      ansible_host: nae1.lab-pt.cisco.com
+      nae_username: 'admin'
+      nae_ag_name: 'site_lisbon'
+      nae_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          35373564386430343935633332663034373439393835363266346435376437666436323963313930
+          3339303564383331303634646266306263663266626261380a323564356337623739303631613864
+          37613131323030623437353364393763623061643339656539356534333633366237366166313566
+          3036323162613930610a353162313764356637303633343664323631393436633831343333613863
+          6436

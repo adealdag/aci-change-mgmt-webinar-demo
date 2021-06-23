@@ -1,0 +1,149 @@
+# ACI playbook - Create Production App Marketplace
+
+- name: Create Production App Marketplace
+  hosts: '*apic1'
+  connection: local
+  gather_facts: no
+  
+  vars:
+    aci_login: &aci_login
+        host: "{{ ansible_host }}"
+        username: "{{ aci_username }}"
+        password: "{{ aci_password | default(omit) }}"
+        private_key: "{{ aci_private_key | default(omit) }}"
+        certificate_name: "{{ aci_certificate_name | default(omit) }}"
+        validate_certs: "{{ aci_validate_certs }}"
+        annotation: "orchestrator:ansible"
+
+  tasks:
+    - name: Add Marketplace Application Profile
+      cisco.aci.aci_ap:
+        <<: *aci_login
+        tenant: production_tn
+        ap: app_marketplace_ap
+        state: present
+        output_path: dryrun_data.json
+
+    - name: Add app_marketplace/frontend EPG
+      cisco.aci.aci_epg:
+        <<: *aci_login
+        tenant: production_tn
+        ap: app_marketplace_ap
+        epg: frontend_epg
+        bd: 192.168.210.0_24_bd
+        preferred_group: no
+        state: present
+        output_path: dryrun_data.json
+
+    - name: Add app_marketplace/backend EPG
+      cisco.aci.aci_epg:
+        <<: *aci_login
+        tenant: production_tn
+        ap: app_marketplace_ap
+        epg: backend_epg
+        bd: 192.168.211.0_24_bd
+        preferred_group: no
+        state: present
+        output_path: dryrun_data.json
+
+    - name: Add app_marketplace/database EPG
+      cisco.aci.aci_epg:
+        <<: *aci_login
+        tenant: production_tn
+        ap: app_marketplace_ap
+        epg: database_epg
+        bd: 192.168.212.0_24_bd
+        preferred_group: no
+        state: present
+        output_path: dryrun_data.json
+
+    # Contracts
+
+    - name: Add contract for frontend_to_backend
+      cisco.aci.aci_contract:
+        <<: *aci_login
+        tenant: production_tn
+        contract: mp_fe_to_be_con
+        description: Communication between web servers and application backend
+        scope: application-profile
+        state: present
+        output_path: dryrun_data.json
+
+    - name: Add contract subject for frontend_to_backend
+      cisco.aci.aci_contract_subject:
+        <<: *aci_login
+        tenant: production_tn
+        contract: mp_fe_to_be_con
+        subject: http_https
+        reverse_filter: yes
+        state: present
+        output_path: dryrun_data.json
+
+    - name: Bind filters to contract subject for frontend_to_backend
+      cisco.aci.aci_contract_subject_to_filter:
+        <<: *aci_login
+        tenant: production_tn
+        contract: mp_fe_to_be_con
+        subject: http_https
+        filter: "{{ item }}"
+        log: log
+        state: present
+        output_path: dryrun_data.json
+      loop:
+        - http
+        - https
+
+    - name: Add contract for backend_to_database
+      cisco.aci.aci_contract:
+        <<: *aci_login
+        tenant: production_tn
+        contract: mp_be_to_db_con
+        description: Communication between application backend and databases
+        scope: application-profile
+        state: present
+        output_path: dryrun_data.json
+
+    - name: Add contract subject for backend_to_database
+      cisco.aci.aci_contract_subject:
+        <<: *aci_login
+        tenant: production_tn
+        contract: mp_be_to_db_con
+        subject: mongodb
+        reverse_filter: yes
+        state: present
+        output_path: dryrun_data.json
+
+    - name: Bind filters to contract subject for backend_to_database
+      cisco.aci.aci_contract_subject_to_filter:
+        <<: *aci_login
+        tenant: production_tn
+        contract: mp_be_to_db_con
+        subject: mongodb
+        filter: "{{ item }}"
+        log: log
+        state: present
+        output_path: dryrun_data.json
+      loop:
+        - mongodb
+  
+    # Apply contracts
+
+    - name: Add contracts for app Marketplace
+      cisco.aci.aci_epg_to_contract:
+        <<: *aci_login
+        tenant: production_tn
+        ap: app_marketplace_ap
+        epg: "{{ item.epg }}"
+        contract: "{{ item.contract }}"
+        contract_type: "{{ item.type }}"
+        state: present
+        output_path: dryrun_data.json
+      loop:
+        - { epg: 'frontend_epg', contract: 'shared_core_l3out_con', type: 'consumer' }
+        - { epg: 'frontend_epg', contract: 'mp_fe_to_be_con', type: 'consumer' }
+        - { epg: 'backend_epg', contract: 'mp_fe_to_be_con', type: 'provider' }
+        - { epg: 'backend_epg', contract: 'mp_be_to_db_con', type: 'consumer' }
+        - { epg: 'database_epg', contract: 'mp_be_to_db_con', type: 'provider' }
+
+
+      
