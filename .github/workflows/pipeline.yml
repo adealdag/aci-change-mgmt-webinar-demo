@@ -34,3 +34,25 @@ jobs:
         run: |
           export no_proxy=$APIC_HOST,$no_proxy
           python ./tools/py_trigger_backup.py
+
+  ansible dry-run:
+    runs-on: self-hosted
+    container: adealdag/ansible:latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run ansible playbook dry-run
+        env:
+          VAULT_KEY: ${{ secrets.VAULT_KEY }}
+        run: |
+          ansible --version
+          echo $VAULT_KEY > vault.key
+          ansible-playbook -i inventory.yaml --vault-password-file vault.key ci-playbook.yaml --check
+          rm vault.key
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: config-dump
+          path: dump.json
