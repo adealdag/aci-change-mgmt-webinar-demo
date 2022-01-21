@@ -28,7 +28,9 @@ jobs:
 
       - name: Take an aci snapshot
         env:
-          APIC_URL: ${{ secrets.APIC_URL }}
+          APIC_HOST: ${{ secrets.APIC_HOST }}
           APIC_USERNAME: ${{ secrets.APIC_USERNAME }}
           APIC_PASSWORD: ${{ secrets.APIC_PASSWORD }}
-        run: python ./tools/py_trigger_backup.py
+        run: |
+          export no_proxy=$APIC_HOST,$no_proxy
+          python ./tools/py_trigger_backup.py
