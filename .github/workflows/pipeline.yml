@@ -27,4 +27,8 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Take an aci snapshot
+        env:
+          APIC_URL: ${{ secret.APIC_URL }}
+          APIC_USERNAME: ${{ secret.APIC_USERNAME }}
+          APIC_PASSWORD: ${{ secret.APIC_PASSWORD }}
         run: python ./tools/py_trigger_backup.py
