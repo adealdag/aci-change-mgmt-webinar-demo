@@ -28,7 +28,7 @@ jobs:
 
       - name: Take an aci snapshot
         env:
-          APIC_URL: ${{ secret.APIC_URL }}
-          APIC_USERNAME: ${{ secret.APIC_USERNAME }}
-          APIC_PASSWORD: ${{ secret.APIC_PASSWORD }}
+          APIC_URL: ${{ secrets.APIC_URL }}
+          APIC_USERNAME: ${{ secrets.APIC_USERNAME }}
+          APIC_PASSWORD: ${{ secrets.APIC_PASSWORD }}
         run: python ./tools/py_trigger_backup.py
