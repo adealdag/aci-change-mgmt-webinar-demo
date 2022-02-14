@@ -5,6 +5,7 @@ import json
 import time
 import os
 import argparse
+import mimetypes
 
 # Credentials and login details must be provided as env variables
 nd_url = "https://" + os.getenv('ND_HOST')
@@ -85,7 +86,7 @@ url = nd_url + \
         args.igname, args.site)
 
 data = {
-    "allowUnsupportedObjectModification": False,
+    "allowUnsupportedObjectModification": True,
     "analysisSubmissionTime": round(time.time() * 1000),
     "baseEpochId": base_epoch_data["epochId"],
     "baseEpochCollectionTimestamp": base_epoch_data["collectionTimeMsecs"],
@@ -101,7 +102,8 @@ with open('data.json', 'w') as data_file:
 
 files = [
     ('data', ('data.json', open('data.json', 'r'), 'application/json')),
-    ('file', ('app-hrms.xml', open(args.file, 'r'), 'text/xml'))
+    ('file', (os.path.basename(args.file), open(
+        args.file, 'r'), mimetypes.guess_type(args.file)))
 ]
 
 response = session.post(
