@@ -30,7 +30,7 @@ parser.add_argument(
 parser.add_argument(
     "--timeout", help="pre-change analysis timeout, in minutes (optional, default is 15)", type=int, default=15)
 parser.add_argument(
-    "--loglevel", help="logging level (optional, default is WARNING)", choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"])
+    "--loglevel", help="logging level (optional, default is WARNING)", choices=["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"], default="WARNING")
 
 args = parser.parse_args()
 
