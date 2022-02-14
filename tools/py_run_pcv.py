@@ -96,12 +96,12 @@ data = {
     "uploadedFileName": args.name
 }
 
-with open('data.json', 'wb') as data_file:
+with open('data.json', 'w') as data_file:
     json.dump(data, data_file)
 
 files = [
-    ('data', ('data.json', open('data.json', 'rb'), 'application/json')),
-    ('file', ('app-hrms.xml', open(args.file, 'rb'), 'text/xml'))
+    ('data', ('data.json', open('data.json', 'r'), 'application/json')),
+    ('file', ('app-hrms.xml', open(args.file, 'r'), 'text/xml'))
 ]
 
 response = session.post(
