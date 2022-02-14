@@ -148,28 +148,34 @@ while(job_status != "COMPLETED" and retries_left > 0):
             "Job is still not completed, current state is {}. There are {} retries left. Checking again in 60 seconds...".format(job_status, retries_left))
         continue
 
-# Get pre-change analysis epoch information
+logging.info("Job completed. Epoch Delta JobID is {}".format(
+    pcv_job_status_data["epochDeltaJobId"]))
+
+# Get epoch delta analysis information
 url = nd_url + \
-    "/sedgeapi/v1/cisco-nir/api/api/telemetry/v2/events/insightsGroup/{}/fabric/{}/epochs?$epochId={}".format(
-        args.igname, args.site, pcv_job_status_data["preChangeEpochUUID"])
+    "/sedgeapi/v1/cisco-nir/api/api/telemetry/v2/epochDelta/insightsGroup/{}/fabric/{}/job/{}/health/view/eventSeverity".format(
+        args.igname, args.site, pcv_job_status_data["epochDeltaJobId"])
 
 response = session.get(url, headers={})
 
 if response.status_code != 200:
-    logging.error("Pre-change Epoch collection failed: {}".format(
+    logging.error("Epoch Delta collection failed: {}".format(
         response.json()))
     sys.exit(-1)
 else:
-    pcv_epoch_data = response.json()["value"]["data"][0]
+    pcv_epoch_delta_data = response.json()["value"]["data"]
 
-# Analyze epoch data
-assurance_info = pcv_epoch_data["assuranceInfo"]
+# Analyze epoch delta results
 delta_result = 0
 
-for sev in assurance_info:
+for item in pcv_epoch_delta_data:
+    event_count = {x["bucket"]: x["count"] for x in item["output"]}
     logging.info(
-        "There are {} new {} anomalies after pre-change analysis".format(sev["count"], sev["severity"].upper()))
-    delta_result += sev["count"]
+        "There are {} new {} anomalies after pre-change analysis".format(event_count["EPOCH2_ONLY"], item["bucket"].split("_")[-1]))
+    # INFO events are not considered
+    if "INFO" not in item["bucket"]:
+        delta_result += event_count["EPOCH2_ONLY"]
 
-logging.info("Total number of new anomalies is: {}".format(delta_result))
+logging.info(
+    "Total number of new relevant anomalies (INFO excluded) is: {}".format(delta_result))
 sys.exit(delta_result)
