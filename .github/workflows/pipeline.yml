@@ -61,7 +61,7 @@ jobs:
     # The type of runner that the job will run on
     runs-on: self-hosted
     needs: ansible-dry-run
-    container: adealdag/aci_cobra:4.2.3n
+    container: adealdag/python:3.9.10-mod
 
     steps:
       - uses: actions/checkout@v2
