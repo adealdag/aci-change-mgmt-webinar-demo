@@ -83,4 +83,5 @@ jobs:
           ND_DOMAIN: ${{ secrets.ND_DOMAIN }}
         run: |
           export no_proxy=$ND_HOST,$no_proxy
-          python ./tools/run_prechange/py_run_pcv.py --name $GITHUB_SHA --igname dc_spain --site MLG01 --file config.json --loglevel INFO --allowUnsupportedObjectModification
+          cat config.json
+          python ./tools/run_prechange/py_run_pcv.py --name $GITHUB_SHA --igname dc_spain --site MLG01 --file ./config.json --loglevel INFO --allowUnsupportedObjectModification
