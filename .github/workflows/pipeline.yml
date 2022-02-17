@@ -35,7 +35,7 @@ jobs:
           export no_proxy=$APIC_HOST,$no_proxy
           python ./tools/py_trigger_backup.py
 
-  ansible dry-run:
+  ansible-dry-run:
     runs-on: self-hosted
     container: adealdag/ansible:latest
 
