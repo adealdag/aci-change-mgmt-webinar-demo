@@ -56,3 +56,27 @@ jobs:
         with:
           name: config-dump
           path: dryrun_data.json
+
+  pre-change-validation:
+    # The type of runner that the job will run on
+    runs-on: self-hosted
+    needs: ansible-dry-run
+    container: adealdag/aci_cobra:4.2.3n
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: config-dump
+
+      - name: Run pre-change validation on Nexus Dashboard Insights
+        env:
+          ND_HOST: ${{ secrets.ND_HOST }}
+          ND_USERNAME: ${{ secrets.ND_USERNAME }}
+          ND_PASSWORD: ${{ secrets.ND_PASSWORD }}
+          ND_DOMAIN: ${{ secrets.ND_DOMAIN }}
+        run: |
+          export no_proxy=$ND_HOST,$no_proxy
+          python ./tools/run_prechange/py_run_pcv.py --name $(git rev-parse --short "$GITHUB_SHA") --igname dc_spain --site MLG01 --file dryrun_data.json --loglevel INFO --allowUnsupportedObjectModification
