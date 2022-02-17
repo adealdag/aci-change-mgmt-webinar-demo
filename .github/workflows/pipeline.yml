@@ -48,7 +48,7 @@ jobs:
         run: |
           ansible --version
           echo $VAULT_KEY > vault.key
-          ansible-playbook -i inventory.yaml --vault-password-file vault.key prod_app_marketplace.yaml --check
+          ansible-playbook -i inventory.yaml --vault-password-file vault.key prod_tenant.yaml prod_app_marketplace.yaml --check
           rm vault.key
 
       - name: Upload artifact
@@ -83,5 +83,4 @@ jobs:
           ND_DOMAIN: ${{ secrets.ND_DOMAIN }}
         run: |
           export no_proxy=$ND_HOST,$no_proxy
-          cat config.json
           python ./tools/run_prechange/py_run_pcv.py --name $GITHUB_SHA --igname dc_spain --site MLG01 --file ./config.json --loglevel INFO --allowUnsupportedObjectModification
