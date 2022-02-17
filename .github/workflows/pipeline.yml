@@ -79,4 +79,4 @@ jobs:
           ND_DOMAIN: ${{ secrets.ND_DOMAIN }}
         run: |
           export no_proxy=$ND_HOST,$no_proxy
-          python ./tools/run_prechange/py_run_pcv.py --name $(git rev-parse --short "$GITHUB_SHA") --igname dc_spain --site MLG01 --file dryrun_data.json --loglevel INFO --allowUnsupportedObjectModification
+          python ./tools/run_prechange/py_run_pcv.py --name $GITHUB_SHA --igname dc_spain --site MLG01 --file dryrun_data.json --loglevel INFO --allowUnsupportedObjectModification
