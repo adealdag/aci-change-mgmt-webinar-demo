@@ -33,7 +33,7 @@ jobs:
           APIC_PASSWORD: ${{ secrets.APIC_PASSWORD }}
         run: |
           export no_proxy=$APIC_HOST,$no_proxy
-          python ./tools/py_trigger_backup.py
+          python ./tools/trigger_backup/py_trigger_backup.py
 
   ansible-dry-run:
     runs-on: self-hosted
@@ -48,11 +48,11 @@ jobs:
         run: |
           ansible --version
           echo $VAULT_KEY > vault.key
-          ansible-playbook -i inventory.yaml --vault-password-file vault.key ci-playbook.yaml --check
+          ansible-playbook -i inventory.yaml --vault-password-file vault.key prod_app_marketplace.yaml --check
           rm vault.key
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: config-dump
-          path: dump.json
+          path: dryrun_data.json
